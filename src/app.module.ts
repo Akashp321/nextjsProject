@@ -1,25 +1,27 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-
-import { User, UserSchema } from './users/user.schema';
-import { UserService } from './users/user.service';
-import { AuthService } from './auth/auth.service';
-import { AuthController } from './auth/auth.controller';
-import { UserController } from './users/user.controller';
-import { JwtModule } from '@nestjs/jwt';
-
+import { ProductsModule } from './products/products.module';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { MailModule } from './mail/mail.module';
+import { TaskModule } from './tasks/tasks.module';
+import { QueryModule } from './queue/queue.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { BullModule } from '@nestjs/bull';
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }), 
-    MongooseModule.forRoot('mongodb://localhost:27017/nest-auth'),
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    JwtModule.register({
-      secret: 'supersecretjwtkey123',
-      signOptions: { expiresIn: '1d' },
+    MongooseModule.forRoot('mongodb://localhost:27017/nest-multer'),
+    ScheduleModule.forRoot(),
+    BullModule.forRoot({
+      redis:{
+        host:'localhost',
+        port:3000,
+      }
     }),
+    ProductsModule,MailModule,TaskModule,QueryModule
   ],
-  controllers: [AuthController, UserController],
-  providers: [UserService, AuthService],
 })
-export class AppModule {}
+export class AppModule {
+   configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*'); 
+  }
+}
