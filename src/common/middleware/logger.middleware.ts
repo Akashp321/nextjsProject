@@ -12,6 +12,7 @@ export class LoggerMiddleware implements NestMiddleware {
       console.log(`[${method}] ${originalUrl} => ${statusCode} (${duration}ms)`);
     });
 
+    
     next();
   }
 }
